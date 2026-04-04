@@ -1,11 +1,22 @@
-[modloader]
-loader="neoforge"
+modLoader="neoforge"
+loaderVersion="[1,)"
+license="All Rights Reserved"
 
-[version]
-version="1.0.0"
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+logoFile="assets/multiblockextra/logo.png"
+credits="Multiblock Extra System"
+authors="Developer"
+description="""
+A NeoForge mod that adds multiblock spawner structures for custom entities.
+Build T-shaped structures with specific blocks to spawn unique creatures.
+"""
 
-display_name="My Mod"
-
-description="This is a description of my mod."
-
-dependencies="[\"neoforge\", \"mowziesmobs\"]"
+[[dependencies.multiblockextra]]
+modId="neoforge"
+mandatory=true
+versionRange="[1,)"
+ordering="NONE"
+side="BOTH"

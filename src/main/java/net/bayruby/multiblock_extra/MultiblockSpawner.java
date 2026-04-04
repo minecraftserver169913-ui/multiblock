@@ -1,67 +1,105 @@
 package net.bayruby.multiblock_extra;
 
-import org.bukkit.Material;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Block;
 
 public class MultiblockSpawner {
 
-    public static void detectAndSpawnEntities(Location origin, Player player) {
-        // Check for a T-shaped structure
-        if (isTShape(origin)) {
-            // Spawn entities based on the detection
-            spawnEntities(origin);
-            player.sendMessage("A T-shaped multiblock has been detected and entities spawned!");
-        } else {
-            player.sendMessage("No valid T-shaped structure found.");
+    public static void checkForMultiblock(Level level, BlockPos pos) {
+        if (level.isClientSide) return;
+
+        if (checkUmvuthiStructure(level, pos)) {
+            spawnUmvuthi(level, pos);
+            return;
+        }
+
+        if (checkFerrusStructure(level, pos)) {
+            spawnFerrus(level, pos);
+            return;
+        }
+
+        if (checkFrostmawStructure(level, pos)) {
+            spawnFrostmaw(level, pos);
+            return;
         }
     }
 
-    private static boolean isTShape(Location origin) {
-        // Assuming the structure is centered at the origin block
-        Block base = origin.getBlock();
-        Block[] structureBlocks = new Block[9];  // Placeholder for block checks
-
-        // Check vertical blocks
-        structureBlocks[0] = base.getRelative(0, 0, 0);  // Center
-        structureBlocks[1] = base.getRelative(0, -1, 0); // Bottom
-        structureBlocks[2] = base.getRelative(0, 1, 0);  // Top
-        structureBlocks[3] = base.getRelative(-1, 0, 0); // Left
-        structureBlocks[4] = base.getRelative(1, 0, 0);  // Right
-        structureBlocks[5] = base.getRelative(0, 0, -1); // Back
-        structureBlocks[6] = base.getRelative(0, 0, 1);  // Front
-
-        // Check T shape conditions: Vertical column + horizontal row
-        return (isMaterial(constantMaterial(), structureBlocks[1]) &&
-                isMaterial(constantMaterial(), structureBlocks[2]) &&
-                isMaterial(constantMaterial(), structureBlocks[3]) &&
-                isMaterial(constantMaterial(), structureBlocks[4]) &&
-                (isHeadType(structureBlocks[1]) || isHeadType(structureBlocks[2])));
+    private static boolean checkUmvuthiStructure(Level level, BlockPos pos) {
+        return checkTStructure(level, pos, Blocks.GOLD_BLOCK, Blocks.PUMPKIN);
     }
 
-    private static boolean isMaterial(Material material, Block block) {
-        return block.getType() == material;
+    private static boolean checkFerrusStructure(Level level, BlockPos pos) {
+        return checkTStructure(level, pos, Blocks.IRON_BLOCK, Blocks.ANVIL);
     }
 
-    private static boolean isHeadType(Block block) {
-        return block.getType() == Material.PUMPKIN || block.getType() == Material.ANVIL;
+    private static boolean checkFrostmawStructure(Level level, BlockPos pos) {
+        return checkTStructure(level, pos, Blocks.ICE, Blocks.PUMPKIN);
     }
 
-    private static void spawnEntities(Location location) {
-        // Spawn entities here based on the type of T-shape detected
-        // Example: Spawn a few entities
-        location.getWorld().spawnEntity(location.add(1, 0, 0), EntityType.ZOMBIE);
-        location.getWorld().spawnEntity(location.add(-1, 0, 0), EntityType.SKELETON);
-        // Clear out the location for proper spawning
-        location.add(-1, 0, 0);  // Reset to the origin
+    private static boolean checkTStructure(Level level, BlockPos pos, Block stemBlock, Block headBlock) {
+        try {
+            BlockPos center = pos;
+            BlockPos up1 = center.above();
+            BlockPos up2 = center.above(2);
+            BlockPos down1 = center.below();
+            BlockPos left = center.west();
+            BlockPos right = center.east();
+            BlockPos forward = center.north();
+            BlockPos back = center.south();
+
+            if (!isBlock(level, up2, headBlock)) return false;
+            if (!isBlock(level, up1, stemBlock)) return false;
+            if (!isBlock(level, center, stemBlock)) return false;
+            if (!isBlock(level, left, stemBlock)) return false;
+            if (!isBlock(level, right, stemBlock)) return false;
+            if (!isBlock(level, forward, stemBlock)) return false;
+            if (!isBlock(level, back, stemBlock)) return false;
+            if (!isBlock(level, down1, stemBlock)) return false;
+
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
-    private static Material constantMaterial() {
-        // Define the material type for the vertical blocks in T shape
-        return Material.GOLD_BLOCK;  // Change based on requirements, can be gold, iron, or ice
+    private static boolean isBlock(Level level, BlockPos pos, Block block) {
+        return level.getBlockState(pos).getBlock() == block;
+    }
+
+    private static void spawnUmvuthi(Level level, BlockPos pos) {
+        UmvuthiEntity entity = new UmvuthiEntity(MultiblockExtra.UMVUTHI.get(), level);
+        entity.moveTo(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0, 0);
+        level.addFreshEntity(entity);
+        removeStructure(level, pos);
+        MultiblockExtra.LOGGER.info("Umvuthi spawned at {}", pos);
+    }
+
+    private static void spawnFerrus(Level level, BlockPos pos) {
+        FerrusWraughtnaught entity = new FerrusWraughtnaught(MultiblockExtra.FERRUS_WRAUGHTNAUGHT.get(), level);
+        entity.moveTo(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0, 0);
+        level.addFreshEntity(entity);
+        removeStructure(level, pos);
+        MultiblockExtra.LOGGER.info("Ferrus Wraughtnaught spawned at {}", pos);
+    }
+
+    private static void spawnFrostmaw(Level level, BlockPos pos) {
+        FrostmawEntity entity = new FrostmawEntity(MultiblockExtra.FROSTMAW.get(), level);
+        entity.moveTo(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0, 0);
+        level.addFreshEntity(entity);
+        removeStructure(level, pos);
+        MultiblockExtra.LOGGER.info("Frostmaw spawned at {}", pos);
+    }
+
+    private static void removeStructure(Level level, BlockPos pos) {
+        level.destroyBlock(pos.above(2), false);
+        level.destroyBlock(pos.above(), false);
+        level.destroyBlock(pos, false);
+        level.destroyBlock(pos.below(), false);
+        level.destroyBlock(pos.west(), false);
+        level.destroyBlock(pos.east(), false);
+        level.destroyBlock(pos.north(), false);
+        level.destroyBlock(pos.south(), false);
     }
 }

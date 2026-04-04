@@ -1,64 +1,34 @@
 package net.bayruby.multiblock_extra;
 
-import net.minecraft.entity.monster.Monster;
-import net.minecraft.entity.ai.goal.Goal;
-import java.util.EnumSet;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollingGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 public class UmvuthiEntity extends Monster {
-
-    public UmvuthiEntity(EntityType<? extends Monster> type, World worldIn) {
-        super(type, worldIn);
-        this.setAI();
+    public UmvuthiEntity(EntityType<? extends UmvuthiEntity> entityType, Level level) {
+        super(entityType, level);
+        this.xpReward = 50;
     }
 
-    private void setAI() {
-        this.goalSelector.addGoal(1, new MeleeAttackGoal());
-        this.goalSelector.addGoal(2, new WanderGoal());
+    @Override
+    protected void registerGoals() {
+        this.goalSelector.addGoal(0, new MeleeAttackGoal(this, 1.2D, true));
+        this.goalSelector.addGoal(1, new WaterAvoidingRandomStrollingGoal(this, 1.0D));
+        this.goalSelector.addGoal(2, new RandomLookAroundGoal(this));
+        this.targetSelector.addGoal(0, new NearestAttackableTargetGoal<>(this, Player.class, true));
     }
 
-    // Custom melee attack goal
-    class MeleeAttackGoal extends Goal {
-        public MeleeAttackGoal() {
-            this.setMutexFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
-        }
-
-        @Override
-        public boolean shouldExecute() {
-            // Implement your logic to determine if the goal should execute
-            return true;
-        }
-
-        @Override
-        public void startExecuting() {
-            // Implementation for start executing melee attack
-        }
-
-        @Override
-        public void resetTask() {
-            // Logic to reset task
-        }
-    }
-
-    // Custom wander goal
-    class WanderGoal extends Goal {
-        public WanderGoal() {
-            this.setMutexFlags(EnumSet.of(Flag.MOVE));
-        }
-
-        @Override
-        public boolean shouldExecute() {
-            // Implement logic for wandering
-            return true;
-        }
-
-        @Override
-        public void startExecuting() {
-            // Logic to start wandering
-        }
-
-        @Override
-        public void resetTask() {
-            // Logic to stop wandering
-        }
+    public static AttributeSupplier.Builder createMobAttributes() {
+        return Monster.createMonsterAttributes()
+                .add(Attributes.MAX_HEALTH, 50.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.25D)
+                .add(Attributes.ATTACK_DAMAGE, 8.0D);
     }
 }
