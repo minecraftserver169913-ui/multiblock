@@ -1,68 +1,140 @@
 package net.bayruby.multiblock_extra;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 public class MultiblockSpawner {
 
+    private static final String UMVUTHI_ID = "mowziesmobs:umvuthi";
+    private static final String FROSTMAW_ID = "mowziesmobs:frostmaw";
+    private static final String WROUGHTNAUT_ID = "mowziesmobs:ferrous_wroughtnaut";
+
     public static void tryTrigger(Level level, BlockPos headPos, Block headBlock) {
         if (headBlock == Blocks.PUMPKIN) {
-            // Umvuthi - T made of GOLD_BLOCK + PUMPKIN
-            if (checkTStructure(level, headPos, Blocks.GOLD_BLOCK, Blocks.PUMPKIN)) {
-                spawnMowziesMob(level, headPos, "mowziesmobs:umvuthi");
-                removeTStructure(level, headPos);
+            // Umvuthi - GOLD_BLOCK body + PUMPKIN head
+            if (checkIronGolemShape(level, headPos, Blocks.GOLD_BLOCK, Blocks.PUMPKIN)) {
+                MultiblockExtra.LOGGER.info("[MultiblockExtra] Umvuthi structure detected at {}", headPos);
+                spawnMowziesMob(level, headPos.below(), UMVUTHI_ID);
+                removeIronGolemShape(level, headPos);
+                return;
             }
-            // Frostmaw - T made of ICE + PUMPKIN
-            else if (checkTStructure(level, headPos, Blocks.ICE, Blocks.PUMPKIN)) {
-                spawnMowziesMob(level, headPos, "mowziesmobs:frostmaw");
-                removeTStructure(level, headPos);
+
+            // Frostmaw - ICE body + PUMPKIN head
+            if (checkIronGolemShape(level, headPos, Blocks.ICE, Blocks.PUMPKIN)) {
+                MultiblockExtra.LOGGER.info("[MultiblockExtra] Frostmaw structure detected at {}", headPos);
+                spawnMowziesMob(level, headPos.below(), FROSTMAW_ID);
+                removeIronGolemShape(level, headPos);
+                return;
             }
         } else if (headBlock == Blocks.ANVIL) {
-            // Ferrus Wroughtnaut - T of IRON_BLOCK + ANVIL
-            if (checkTStructure(level, headPos, Blocks.IRON_BLOCK, Blocks.ANVIL)) {
-                spawnMowziesMob(level, headPos, "mowziesmobs:ferrous_wroughtnaut");
-                removeTStructure(level, headPos);
+            // Wroughtnaut - IRON_BLOCK body + ANVIL head
+            if (checkIronGolemShape(level, headPos, Blocks.IRON_BLOCK, Blocks.ANVIL)) {
+                MultiblockExtra.LOGGER.info("[MultiblockExtra] Wroughtnaut structure detected at {}", headPos);
+                spawnMowziesMob(level, headPos.below(), WROUGHTNAUT_ID);
+                removeIronGolemShape(level, headPos);
             }
         }
     }
 
-    // Checks for T-shape centered at block BELOW given head position.
-    private static boolean checkTStructure(Level level, BlockPos headPos, Block stemBlock, Block headBlock) {
-        BlockPos center = headPos.below(); // center is block below the head
-        // Check "up" for head
-        if (!(level.getBlockState(headPos).getBlock() == headBlock)) return false;
-        // Center and arms/leg
-        if (!(level.getBlockState(center).getBlock() == stemBlock)) return false;
-        if (!(level.getBlockState(center.north()).getBlock() == stemBlock)) return false;
-        if (!(level.getBlockState(center.south()).getBlock() == stemBlock)) return false;
-        if (!(level.getBlockState(center.east()).getBlock() == stemBlock)) return false;
-        if (!(level.getBlockState(center.west()).getBlock() == stemBlock)) return false;
-        if (!(level.getBlockState(center.below()).getBlock() == stemBlock)) return false;
-        return true;
-    }
+    /**
+     * Iron golem‑style shape (4 body blocks + head):
+     *
+     * Orientation 1 (east–west arms):
+     *   [ ] [C] [ ]
+     *       |
+     *      [L]
+     *
+     * C = center (body block, directly under head)
+     * L = leg (body block, below center)
+     * Arms = east & west of center
+     *
+     * Orientation 2 (north–south arms) is also allowed.
+     */
+    private static boolean checkIronGolemShape(Level level, BlockPos headPos, Block bodyBlock, Block headBlock) {
+        // Head must match
+        if (level.getBlockState(headPos).getBlock() != headBlock) {
+            return false;
+        }
 
-    // Remove T-structure (and the head block)
-    private static void removeTStructure(Level level, BlockPos headPos) {
         BlockPos center = headPos.below();
-        level.destroyBlock(headPos, false); // Head
-        level.destroyBlock(center, false); // Stem
-        level.destroyBlock(center.north(), false);
-        level.destroyBlock(center.south(), false);
-        level.destroyBlock(center.east(), false);
-        level.destroyBlock(center.west(), false);
-        level.destroyBlock(center.below(), false);
-    }
+        BlockPos leg = center.below();
 
-    // Summon the mob using command context; silent output
-    public static void spawnMowziesMob(Level level, BlockPos pos, String mobId) {
-        if (!level.isClientSide && level.getServer() != null) {
-            String summonCmd = String.format("summon %s %f %f %f", mobId, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
-            level.getServer().getCommands().performPrefixedCommand(
-                    level.getServer().createCommandSourceStack().withSuppressedOutput(),
-                    summonCmd
+        // Center and leg
+        if (level.getBlockState(center).getBlock() != bodyBlock) return false;
+        if (level.getBlockState(leg).getBlock() != bodyBlock) return false;
+
+        // Orientation 1: arms east–west
+        boolean eastWest =
+                level.getBlockState(center.east()).getBlock() == bodyBlock &&
+                        level.getBlockState(center.west()).getBlock() == bodyBlock;
+
+        // Orientation 2: arms north–south
+        boolean northSouth =
+                level.getBlockState(center.north()).getBlock() == bodyBlock &&
+                        level.getBlockState(center.south()).getBlock() == bodyBlock;
+
+        boolean match = eastWest || northSouth;
+
+        if (!match) {
+            MultiblockExtra.LOGGER.debug(
+                    "[MultiblockExtra] Shape check failed at {} for body {} (EW={}, NS={})",
+                    headPos, bodyBlock, eastWest, northSouth
             );
         }
+
+        return match;
+    }
+
+    private static void removeIronGolemShape(Level level, BlockPos headPos) {
+        BlockPos center = headPos.below();
+        BlockPos leg = center.below();
+
+        // Remove head
+        level.destroyBlock(headPos, false);
+
+        // Remove center and leg
+        level.destroyBlock(center, false);
+        level.destroyBlock(leg, false);
+
+        // Remove both possible arm orientations (safe even if air)
+        level.destroyBlock(center.east(), false);
+        level.destroyBlock(center.west(), false);
+        level.destroyBlock(center.north(), false);
+        level.destroyBlock(center.south(), false);
+    }
+
+    public static void spawnMowziesMob(Level level, BlockPos centerPos, String mobId) {
+        if (level.isClientSide) return;
+
+        ResourceLocation id = ResourceLocation.parse(mobId);
+        EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(id);
+
+        if (type == null) {
+            MultiblockExtra.LOGGER.error("[MultiblockExtra] Unknown entity type: {}", mobId);
+            return;
+        }
+
+        var entity = type.create(level);
+        if (entity == null) {
+            MultiblockExtra.LOGGER.error("[MultiblockExtra] Failed to create entity: {}", mobId);
+            return;
+        }
+
+        // Spawn just above the center of the body
+        entity.moveTo(
+                centerPos.getX() + 0.5,
+                centerPos.getY() + 1.0,
+                centerPos.getZ() + 0.5,
+                0.0F,
+                0.0F
+        );
+
+        level.addFreshEntity(entity);
+        MultiblockExtra.LOGGER.info("[MultiblockExtra] Spawned {} at {}", mobId, centerPos);
     }
 }
