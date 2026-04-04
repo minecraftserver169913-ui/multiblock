@@ -1,1 +1,4 @@
-{\n    \"entity.multiblockextra.umvuthi\": \"Umvuthi: A mystical creature known for its agility.\",\n    \"entity.multiblockextra.ferrus_wraughtnaught\": \"Ferrus Wraughtnaught: A formidable war machine, crafted from iron.\",\n    \"entity.multiblockextra.frostmaw\": \"Frostmaw: A fearsome ice beast that roams the coldest regions.\"\n}
+{
+  "block.multiblockextra.icebound_skull": "Icebound Skull",
+  "item.multiblockextra.icebound_skull": "Icebound Skull"
+}

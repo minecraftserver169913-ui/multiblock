@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_skull",
+  "textures": {
+    "texture": "multiblockextra:block/icebound_skull",
+    "particle": "multiblockextra:block/icebound_skull"
+  }
+}

@@ -1,5 +1,11 @@
 package net.bayruby.multiblock_extra;
 
+import net.bayruby.multiblock_extra.block.ModBlocks;
+import net.bayruby.multiblock_extra.item.ModItems;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
@@ -30,6 +36,13 @@ public class MultiblockExtra {
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 
         NeoForge.EVENT_BUS.register(this);
+
+        ModItems.register(modEventBus);
+        ModBlocks.register(modEventBus);
+
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            modEventBus.register(MultiblockExtraClient.class);
+        }
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
@@ -38,6 +51,9 @@ public class MultiblockExtra {
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
         // No custom items yet
+        if(event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS){
+            event.accept(ModBlocks.ICEBOUND_SKULL.get());
+        }
     }
 
     @SubscribeEvent
