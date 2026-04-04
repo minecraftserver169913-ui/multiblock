@@ -2,104 +2,67 @@ package net.bayruby.multiblock_extra;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 public class MultiblockSpawner {
 
-    public static void checkForMultiblock(Level level, BlockPos pos) {
-        if (level.isClientSide) return;
-
-        if (checkUmvuthiStructure(level, pos)) {
-            spawnUmvuthi(level, pos);
-            return;
-        }
-
-        if (checkFerrusStructure(level, pos)) {
-            spawnFerrus(level, pos);
-            return;
-        }
-
-        if (checkFrostmawStructure(level, pos)) {
-            spawnFrostmaw(level, pos);
-            return;
-        }
-    }
-
-    private static boolean checkUmvuthiStructure(Level level, BlockPos pos) {
-        return checkTStructure(level, pos, Blocks.GOLD_BLOCK, Blocks.PUMPKIN);
-    }
-
-    private static boolean checkFerrusStructure(Level level, BlockPos pos) {
-        return checkTStructure(level, pos, Blocks.IRON_BLOCK, Blocks.ANVIL);
-    }
-
-    private static boolean checkFrostmawStructure(Level level, BlockPos pos) {
-        return checkTStructure(level, pos, Blocks.ICE, Blocks.PUMPKIN);
-    }
-
-    private static boolean checkTStructure(Level level, BlockPos pos, Block stemBlock, Block headBlock) {
-        try {
-            BlockPos center = pos;
-            BlockPos up1 = center.above();
-            BlockPos up2 = center.above(2);
-            BlockPos down1 = center.below();
-            BlockPos left = center.west();
-            BlockPos right = center.east();
-            BlockPos forward = center.north();
-            BlockPos back = center.south();
-
-            if (!isBlock(level, up2, headBlock)) return false;
-            if (!isBlock(level, up1, stemBlock)) return false;
-            if (!isBlock(level, center, stemBlock)) return false;
-            if (!isBlock(level, left, stemBlock)) return false;
-            if (!isBlock(level, right, stemBlock)) return false;
-            if (!isBlock(level, forward, stemBlock)) return false;
-            if (!isBlock(level, back, stemBlock)) return false;
-            if (!isBlock(level, down1, stemBlock)) return false;
-
-            return true;
-        } catch (Exception e) {
-            return false;
+    public static void tryTrigger(Level level, BlockPos headPos, Block headBlock) {
+        if (headBlock == Blocks.PUMPKIN) {
+            // Umvuthi - T made of GOLD_BLOCK + PUMPKIN
+            if (checkTStructure(level, headPos, Blocks.GOLD_BLOCK, Blocks.PUMPKIN)) {
+                spawnMowziesMob(level, headPos, "mowziesmobs:umvuthi");
+                removeTStructure(level, headPos);
+            }
+            // Frostmaw - T made of ICE + PUMPKIN
+            else if (checkTStructure(level, headPos, Blocks.ICE, Blocks.PUMPKIN)) {
+                spawnMowziesMob(level, headPos, "mowziesmobs:frostmaw");
+                removeTStructure(level, headPos);
+            }
+        } else if (headBlock == Blocks.ANVIL) {
+            // Ferrus Wroughtnaut - T of IRON_BLOCK + ANVIL
+            if (checkTStructure(level, headPos, Blocks.IRON_BLOCK, Blocks.ANVIL)) {
+                spawnMowziesMob(level, headPos, "mowziesmobs:ferrous_wroughtnaut");
+                removeTStructure(level, headPos);
+            }
         }
     }
 
-    private static boolean isBlock(Level level, BlockPos pos, Block block) {
-        return level.getBlockState(pos).getBlock() == block;
+    // Checks for T-shape centered at block BELOW given head position.
+    private static boolean checkTStructure(Level level, BlockPos headPos, Block stemBlock, Block headBlock) {
+        BlockPos center = headPos.below(); // center is block below the head
+        // Check "up" for head
+        if (!(level.getBlockState(headPos).getBlock() == headBlock)) return false;
+        // Center and arms/leg
+        if (!(level.getBlockState(center).getBlock() == stemBlock)) return false;
+        if (!(level.getBlockState(center.north()).getBlock() == stemBlock)) return false;
+        if (!(level.getBlockState(center.south()).getBlock() == stemBlock)) return false;
+        if (!(level.getBlockState(center.east()).getBlock() == stemBlock)) return false;
+        if (!(level.getBlockState(center.west()).getBlock() == stemBlock)) return false;
+        if (!(level.getBlockState(center.below()).getBlock() == stemBlock)) return false;
+        return true;
     }
 
-    private static void spawnUmvuthi(Level level, BlockPos pos) {
-        UmvuthiEntity entity = new UmvuthiEntity(MultiblockExtra.UMVUTHI.get(), level);
-        entity.moveTo(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0, 0);
-        level.addFreshEntity(entity);
-        removeStructure(level, pos);
-        MultiblockExtra.LOGGER.info("Umvuthi spawned at {}", pos);
+    // Remove T-structure (and the head block)
+    private static void removeTStructure(Level level, BlockPos headPos) {
+        BlockPos center = headPos.below();
+        level.destroyBlock(headPos, false); // Head
+        level.destroyBlock(center, false); // Stem
+        level.destroyBlock(center.north(), false);
+        level.destroyBlock(center.south(), false);
+        level.destroyBlock(center.east(), false);
+        level.destroyBlock(center.west(), false);
+        level.destroyBlock(center.below(), false);
     }
 
-    private static void spawnFerrus(Level level, BlockPos pos) {
-        FerrusWraughtnaught entity = new FerrusWraughtnaught(MultiblockExtra.FERRUS_WRAUGHTNAUGHT.get(), level);
-        entity.moveTo(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0, 0);
-        level.addFreshEntity(entity);
-        removeStructure(level, pos);
-        MultiblockExtra.LOGGER.info("Ferrus Wraughtnaught spawned at {}", pos);
-    }
-
-    private static void spawnFrostmaw(Level level, BlockPos pos) {
-        FrostmawEntity entity = new FrostmawEntity(MultiblockExtra.FROSTMAW.get(), level);
-        entity.moveTo(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0, 0);
-        level.addFreshEntity(entity);
-        removeStructure(level, pos);
-        MultiblockExtra.LOGGER.info("Frostmaw spawned at {}", pos);
-    }
-
-    private static void removeStructure(Level level, BlockPos pos) {
-        level.destroyBlock(pos.above(2), false);
-        level.destroyBlock(pos.above(), false);
-        level.destroyBlock(pos, false);
-        level.destroyBlock(pos.below(), false);
-        level.destroyBlock(pos.west(), false);
-        level.destroyBlock(pos.east(), false);
-        level.destroyBlock(pos.north(), false);
-        level.destroyBlock(pos.south(), false);
+    // Summon the mob using command context; silent output
+    public static void spawnMowziesMob(Level level, BlockPos pos, String mobId) {
+        if (!level.isClientSide && level.getServer() != null) {
+            String summonCmd = String.format("summon %s %f %f %f", mobId, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
+            level.getServer().getCommands().performPrefixedCommand(
+                    level.getServer().createCommandSourceStack().withSuppressedOutput(),
+                    summonCmd
+            );
+        }
     }
 }

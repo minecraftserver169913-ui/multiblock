@@ -17,57 +17,43 @@ import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.BlockEvent.EntityPlaceEvent;
+
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Block;
 
 @Mod(MultiblockExtra.MODID)
 public class MultiblockExtra {
     public static final String MODID = "multiblockextra";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
-
-    public static final DeferredHolder<EntityType<?>, EntityType<UmvuthiEntity>> UMVUTHI = ENTITY_TYPES.register("umvuthi",
-            () -> EntityType.Builder.of(UmvuthiEntity::new, MobCategory.CREATURE)
-                    .sized(0.6f, 1.8f)
-                    .clientTrackingRange(8)
-                    .build("umvuthi"));
-
-    public static final DeferredHolder<EntityType<?>, EntityType<FerrusWraughtnaught>> FERRUS_WRAUGHTNAUGHT = ENTITY_TYPES.register("ferrus_wraughtnaught",
-            () -> EntityType.Builder.of(FerrusWraughtnaught::new, MobCategory.CREATURE)
-                    .sized(0.6f, 1.8f)
-                    .clientTrackingRange(8)
-                    .build("ferrus_wraughtnaught"));
-
-    public static final DeferredHolder<EntityType<?>, EntityType<FrostmawEntity>> FROSTMAW = ENTITY_TYPES.register("frostmaw",
-            () -> EntityType.Builder.of(FrostmawEntity::new, MobCategory.CREATURE)
-                    .sized(0.6f, 1.8f)
-                    .clientTrackingRange(8)
-                    .build("frostmaw"));
-
     public MultiblockExtra(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
-        ENTITY_TYPES.register(modEventBus);
-        NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(this); // Register event handlers
+
         modEventBus.addListener(this::addCreative);
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, null);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
         LOGGER.info("Multiblock Extra initializing!");
     }
 
-    private void addCreative(BuildCreativeModeTabContentsEvent event) {
-    }
+    private void addCreative(BuildCreativeModeTabContentsEvent event) {}
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         LOGGER.info("Multiblock Extra server started!");
     }
 
+    // The main event handler -- only triggers on "head" block placement
     @SubscribeEvent
-    public static void onBlockPlace(BlockEvent.Place event) {
-        if (!event.getLevel().isClientSide) {
-            MultiblockSpawner.checkForMultiblock(event.getLevel(), event.getPos());
+    public void onBlockPlace(EntityPlaceEvent event) {
+        if (event.getLevel() instanceof net.minecraft.world.level.Level level && !level.isClientSide) {
+            Block block = event.getPlacedBlock().getBlock();
+            if (block == Blocks.PUMPKIN || block == Blocks.ANVIL) {
+                MultiblockSpawner.tryTrigger(level, event.getPos(), block);
+            }
         }
     }
 }
