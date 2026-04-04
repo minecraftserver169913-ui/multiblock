@@ -1,0 +1,11 @@
+[modloader]
+loader="neoforge"
+
+[version]
+version="1.0.0"
+
+display_name="My Mod"
+
+description="This is a description of my mod."
+
+dependencies="[\"neoforge\", \"mowziesmobs\"]"
