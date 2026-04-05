@@ -1,5 +1,6 @@
 package net.bayruby.multiblock_extra;
 
+import net.bayruby.multiblock_extra.block.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -15,28 +16,27 @@ public class MultiblockSpawner {
     private static final String WROUGHTNAUT_ID = "mowziesmobs:ferrous_wroughtnaut";
 
     public static void tryTrigger(Level level, BlockPos headPos, Block headBlock) {
-        if (headBlock == Blocks.PUMPKIN) {
-            // Umvuthi - GOLD_BLOCK body + PUMPKIN head
-            if (checkIronGolemShape(level, headPos, Blocks.GOLD_BLOCK, Blocks.PUMPKIN)) {
+        if (headBlock == ModBlocks.UMVUTHI_SKULL.get()) {
+            if (checkIronGolemShape(level, headPos, Blocks.GOLD_BLOCK, ModBlocks.UMVUTHI_SKULL.get())) {
                 MultiblockExtra.LOGGER.info("[MultiblockExtra] Umvuthi structure detected at {}", headPos);
                 spawnMowziesMob(level, headPos.below(), UMVUTHI_ID);
                 removeIronGolemShape(level, headPos);
                 return;
             }
 
-            // Frostmaw - ICE body + PUMPKIN head
-            if (checkIronGolemShape(level, headPos, Blocks.ICE, Blocks.PUMPKIN)) {
+        } else if (headBlock == ModBlocks.RUSTED_HELM.get()) {
+            if (checkIronGolemShape(level, headPos, Blocks.IRON_BLOCK, ModBlocks.RUSTED_HELM.get())) {
+                MultiblockExtra.LOGGER.info("[MultiblockExtra] Wroughtnaut structure detected at {}", headPos);
+                spawnMowziesMob(level, headPos.below(), WROUGHTNAUT_ID);
+                removeIronGolemShape(level, headPos);
+            }
+        }
+        else if (headBlock == ModBlocks.ICEBOUND.get()) {
+            if (checkIronGolemShape(level, headPos, Blocks.SNOW_BLOCK, ModBlocks.ICEBOUND.get())) {
                 MultiblockExtra.LOGGER.info("[MultiblockExtra] Frostmaw structure detected at {}", headPos);
                 spawnMowziesMob(level, headPos.below(), FROSTMAW_ID);
                 removeIronGolemShape(level, headPos);
                 return;
-            }
-        } else if (headBlock == Blocks.ANVIL) {
-            // Wroughtnaut - IRON_BLOCK body + ANVIL head
-            if (checkIronGolemShape(level, headPos, Blocks.IRON_BLOCK, Blocks.ANVIL)) {
-                MultiblockExtra.LOGGER.info("[MultiblockExtra] Wroughtnaut structure detected at {}", headPos);
-                spawnMowziesMob(level, headPos.below(), WROUGHTNAUT_ID);
-                removeIronGolemShape(level, headPos);
             }
         }
     }

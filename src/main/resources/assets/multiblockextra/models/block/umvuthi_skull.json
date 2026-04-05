@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/heavy_core",
+  "textures": {
+    "particle": "minecraft:block/soul_sand",
+    "all": "multiblockextra:block/umvuthi_skull"
+  }
+}

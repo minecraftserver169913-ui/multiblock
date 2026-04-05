@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "entries": [
+    "multiblockextra:stray",
+    "multiblockextra:umvuthana",
+    "multiblockextra:umvuthana_crane",
+    "multiblockextra:umvuthana_raptor",
+    "multiblockextra:umvuthana_follower_raptor"
+  ]
+}

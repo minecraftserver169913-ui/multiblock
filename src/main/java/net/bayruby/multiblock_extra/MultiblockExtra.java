@@ -1,6 +1,7 @@
 package net.bayruby.multiblock_extra;
 
 import net.bayruby.multiblock_extra.block.ModBlocks;
+import net.bayruby.multiblock_extra.drop.ModLootModifiers;
 import net.bayruby.multiblock_extra.item.ModItems;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.api.distmarker.Dist;
@@ -39,10 +40,8 @@ public class MultiblockExtra {
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        ModLootModifiers.LOOT_MODIFIERS.register(modEventBus);
 
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            modEventBus.register(MultiblockExtraClient.class);
-        }
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
@@ -50,9 +49,10 @@ public class MultiblockExtra {
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        // No custom items yet
         if(event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS){
-            event.accept(ModBlocks.ICEBOUND_SKULL.get());
+            event.accept(ModBlocks.ICEBOUND);
+            event.accept(ModBlocks.UMVUTHI_SKULL);
+            event.accept(ModBlocks.RUSTED_HELM);
         }
     }
 
@@ -67,7 +67,7 @@ public class MultiblockExtra {
         if (level.isClientSide) return;
 
         Block placed = event.getPlacedBlock().getBlock();
-        if (placed != Blocks.PUMPKIN && placed != Blocks.ANVIL) {
+        if (placed != ModBlocks.ICEBOUND.get() && placed != ModBlocks.UMVUTHI_SKULL.get() && placed != ModBlocks.RUSTED_HELM.get()) {
             return;
         }
 

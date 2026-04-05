@@ -1,4 +1,5 @@
 {
-  "block.multiblockextra.icebound_skull": "Icebound Skull",
-  "item.multiblockextra.icebound_skull": "Icebound Skull"
+  "block.multiblockextra.icebound": "§eIcebound Skull",
+  "block.multiblockextra.umvuthi_skull": "§eUmvuthi Skull",
+  "block.multiblockextra.rusted_helm": "§eRusted Helm"
 }

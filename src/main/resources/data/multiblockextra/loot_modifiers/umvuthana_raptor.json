@@ -1,0 +1,21 @@
+{
+  "type": "multiblockextra:mob_drop",
+  "conditions": [
+    {
+      "condition": "minecraft:entity_properties",
+      "entity": "this",
+      "predicate": {
+        "type": "mowziesmobs:umvuthana_raptor"
+      }
+    },
+    {
+      "condition": "minecraft:random_chance_with_looting",
+      "chance": 0.025,
+      "looting_multiplier": 0.01
+    }
+  ],
+  "drop": {
+    "id": "multiblockextra:umvuthi_skull",
+    "count": 1
+  }
+}
